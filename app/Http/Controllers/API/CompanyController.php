@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
 use App\Http\Resources\CompanyResource;
+use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,6 +15,7 @@ class CompanyController extends Controller
 {
     public function __construct(public CompanyService $companyService)
     {
+        $this->authorizeResource(Company::class, 'company');
     }
 
     public function index(): JsonResponse
@@ -28,25 +30,15 @@ class CompanyController extends Controller
         return response()->success(CompanyResource::make($company), 'Company created successfully.', 201);
     }
 
-    public function show(string $uuid): JsonResponse
+    public function show(Company $company): JsonResponse
     {
-        $company = $this->companyService->findCompanyByUuid($uuid);
-
-        if (!$company) {
-            return response()->error([], 'Company not found.', 404);
-        }
-
         return response()->success(CompanyResource::make($company));
     }
 
-    public function update(UpdateCompanyRequest $request, string $uuid): JsonResponse
+    public function update(UpdateCompanyRequest $request, Company $company): JsonResponse
     {
-        $company = $this->companyService->updateCompany($uuid, $request->validated());
+        $updatedCompany = $this->companyService->updateCompany($company, $request->validated());
 
-        if (!$company) {
-            return response()->error([], 'Company not found or you do not have permission to update it.', 404);
-        }
-
-        return response()->success(CompanyResource::make($company), 'Company updated successfully.');
+        return response()->success(CompanyResource::make($updatedCompany), 'Company updated successfully.');
     }
 }

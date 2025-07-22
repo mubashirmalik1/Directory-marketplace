@@ -2,22 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class ServiceCategory extends Model
 {
     use HasFactory;
+    use HasUuids;
 
-    protected static function booted()
+    protected $fillable = [
+        'name',
+        'slug',
+        'parent_id',
+        'depth',
+        'uuid',
+    ];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
     {
-        static::creating(function ($serviceCategory) {
-            $serviceCategory->uuid = Str::uuid();
-        });
+        return ['uuid'];
     }
 
     public function parent(): BelongsTo
@@ -30,8 +41,8 @@ class ServiceCategory extends Model
         return $this->hasMany(ServiceCategory::class, 'parent_id');
     }
 
-    public function companies(): BelongsToMany
+    public function getRouteKeyName(): string
     {
-        return $this->belongsToMany(Company::class, 'company_service_category');
+        return 'uuid';
     }
 }
