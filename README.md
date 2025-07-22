@@ -1,61 +1,79 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Directory Marketplace API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is the backend API for the Directory Marketplace application, built with Laravel 11. It provides a robust, scalable, and maintainable foundation for managing users, companies, and other core features.
 
-## About Laravel
+## Core Architectural Pattern
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+The application follows a clean, layered architecture designed for separation of concerns, making it easier to test, maintain, and scale. The primary layers are Controllers, Services, and Repositories.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. Layers
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   **Controllers (`app/Http/Controllers`)**: The outermost layer. Controllers are responsible for handling HTTP requests, validating incoming data using Form Requests, and returning structured JSON responses. They are kept "thin" by delegating all business logic to the service layer.
 
-## Learning Laravel
+-   **Services (`app/Domains/Services`)**: This is where the core business logic resides. Services orchestrate the application's use cases, coordinating between repositories and other services. They are completely decoupled from the HTTP layer and work with simple data arrays or DTOs.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+-   **Repositories (`app/Domains/Repositories`)**: This layer is responsible for all database interactions. It abstracts the data source (Eloquent, in this case) from the rest of the application. This centralizes data access logic and makes it easy to switch out the underlying storage mechanism if needed.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 2. Key Components
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   **Form Requests (`app/Http/Requests`)**: Used for validating all incoming request data before it hits the controller's main logic. This keeps controllers clean and consolidates validation rules.
 
-## Laravel Sponsors
+-   **JSON Resources (`app/Http/Resources`)**: Transform Eloquent models into a consistent, public-facing API format. This ensures that internal database structures are not leaked and that the API contract is strictly defined.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+-   **Standardized API Responses**: All API responses, whether for success or error, are standardized using custom `response()->success()` and `response()->error()` macros. This provides a consistent and predictable response structure for all endpoints.
 
-### Premium Partners
+-   **UUIDs for Public IDs**: All models use UUIDs (`uuid` column) for public-facing identifiers, preventing enumeration of resources and hiding internal database IDs.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Implemented Features
 
-## Contributing
+### 1. Authentication
+A complete authentication system using Laravel Sanctum for token-based authentication.
+-   **User Registration**: Allows new users to create an account.
+-   **User Login**: Authenticates users and issues an API token.
+-   **User Logout**: Revokes the user's current API token.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Welcome Email
+-   Upon successful registration, a `UserRegistered` event is dispatched.
+-   A listener, `SendWelcomeEmail`, handles this event by queuing and sending a welcome email to the new user.
 
-## Code of Conduct
+### 3. Company CRUD
+Full Create, Read, Update, and Delete functionality for companies, accessible via a RESTful API.
+-   **Create Company**: Add a new company.
+-   **List Companies**: Retrieve a list of all companies.
+-   **Show Company**: View the details of a single company by its UUID.
+-   **Update Company**: Modify the details of an existing company.
+-   **Delete Company**: Remove a company.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Getting Started
 
-## Security Vulnerabilities
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-repo/directory-marketplace.git
+    cd directory-marketplace
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2.  **Install dependencies:**
+    ```bash
+    composer install
+    ```
 
-## License
+3.  **Setup environment:**
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4.  **Configure `.env` file:**
+    Update your database credentials, mail driver settings, and other environment variables.
+
+5.  **Run migrations:**
+    ```bash
+    php artisan migrate
+    ```
+
+6.  **Start the server:**
+    ```bash
+    php artisan serve
+    ```
+
+The API will be available at `http://127.0.0.1:8000`.
