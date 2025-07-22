@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly UserService $userService)
+    public function __construct(public UserService $userService)
     {
     }
 
@@ -18,6 +18,6 @@ class UserController extends Controller
     {
         $user = $this->userService->updateProfile($request->user(), $request->validated());
 
-        return response()->success(UserResource::make($user), 'Profile updated successfully.');
+        return response()->success(new UserResource($user), 'Profile updated successfully.');
     }
 }

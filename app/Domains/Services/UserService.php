@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function __construct(private readonly UserRepository $userRepository)
+    public function __construct(public UserRepository $userRepository)
     {
     }
 
