@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Events\UserRegistered;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids;
 
     /**
      * The attributes that are mass assignable.
@@ -46,6 +47,15 @@ class User extends Authenticatable
         'password' => 'hashed',
         'role' => UserRole::class,
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function (self $user) {
+            event(new UserRegistered($user));
+        });
+    }
 
     public function hasRole(UserRole $role): bool
     {

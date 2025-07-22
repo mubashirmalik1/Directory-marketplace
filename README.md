@@ -44,6 +44,15 @@ Full Create, Read, Update, and Delete functionality for companies, accessible vi
 -   **Update Company**: Modify the details of an existing company.
 -   **Delete Company**: Remove a company.
 
+### 4. Company Access Policy (Authorization Rules)
+
+Only admins can mutate companies; regular users can only read.
+
+**Rules:**
+- **viewAny / view**: Allowed for any authenticated user.
+- **create / update / delete / restore / forceDelete**: Allowed **only** for users with the `admin` role.
+
+
 ## Getting Started
 
 1.  **Clone the repository:**
