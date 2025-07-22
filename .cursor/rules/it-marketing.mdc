@@ -1,0 +1,102 @@
+# Tech & Style
+- PHP 8.2+, strict types, PSR-12 formatting, short array syntax.
+- Prefer constructor promotion, typed properties, null-safe ops.
+- Use UUIDs for public IDs (`Str::uuid()` or HasUuids).
+
+# Layers & Paths (no interfaces unless I ask)
+- Validation FormRequests → `app/Http/Requests/**`
+- Json Resources → `app/Http/Resources/**`
+- Repositories (concrete classes) → `app/Domains/Repositories/**`
+- Services (use-case/business logic) → `app/Domains/Services/**`
+- Domain entities/DTOs (if needed) → `app/Domains/Entities/**`, `app/Domains/Services/DTOs/**`
+- Eloquent models → `app/Infrastructure/Models/**`
+- Controllers → `app/Http/Controllers/**`
+- Migrations/Seeders/Factories → default Laravel locations.
+
+# Flow for ANY feature
+1. **FormRequest** for validation.
+2. **Service** method that implements the use case (no Eloquent directly here).
+3. **Repository** to read/write DB (single concrete class, no interface).
+4. **Controller** stays thin: validate → call service → wrap result in Resource → return via macro.
+5. **JsonResource** (single or collection) for all outgoing data.
+
+# Responses (MANDATORY)
+- Never call `response()->json()` directly.
+- Use macros:
+  - `response()->success($data, $message = 'Request was successful', $status = 200, $errors = "")`
+  - `response()->error($data = [], $message = 'There was an error', $status = 400, $errors = "")`
+- Wrap resources in `response()->success(...)`:
+  - `return response()->success(CompanyResource::make($company), 'Company created', 201);`
+  - Collections: `response()->success(CompanyResource::collection($companies));`
+
+# Validation Errors
+- Override default 422 to use the macro.
+  - Either in `Handler::invalidJson()` or in FormRequest `failedValidation()`:
+    ```php
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            response()->error([], 'Validation failed', 422, $validator->errors())
+        );
+    }
+    ```
+- Do NOT return raw `$validator->errors()` without the macro.
+
+# Repository Rules
+- Only DB/Eloquent stuff here.
+- Methods: `save(array $data)`, `findByUuid(string $uuid)`, `listAll()`, etc.
+- Generate slug/uuid here or in Service (pick one and be consistent).
+
+# Service Rules
+- One Service per domain/use-case group (e.g., `CompanyService`).
+- Accept simple arrays or small DTOs. No Request objects in services.
+- Contain orchestration/business logic, call repositories, return models/entities.
+
+# Controller Rules
+- One public method per endpoint.
+- Inject Service and FormRequest.
+- No business logic (loops/calculations) in controller.
+- Always return via `response()->success(...)` or `response()->error(...)`.
+
+# JsonResource Rules
+- Use `JsonResource` for **every** data payload (single/collection).
+- Map only the fields needed for the client.
+- Never expose internal IDs unless required.
+
+# UUID & Slug
+- Migrations: `$table->uuid('uuid')->unique();`
+- Generate UUID on create (service or repo).
+- Slug = `Str::slug($name)`; ensure uniqueness (append random suffix if needed).
+
+# Errors & Exceptions
+- Use `response()->error()` for all handled errors (400–499).
+- For unexpected 500 errors, let Handler catch; optionally format with macro.
+- Don’t leak stack traces in prod.
+
+# Naming & Conventions
+- Classes: `PascalCase`, files match class names.
+- Methods: `camelCase`.
+- DTOs named `SomethingDTO`.
+- FormRequests named `StoreXRequest`, `UpdateXRequest`, etc.
+- Resources named `XResource`.
+
+# Queries & Pagination
+- Use Laravel pagination, then wrap: `XResource::collection($paginator)` and add meta from paginator if needed.
+- Still return with macro: `response()->success([...])`.
+
+# Testing (if asked)
+- Unit test Services & Repositories (use database transactions / sqlite in-memory).
+- Feature test endpoints: assert macro structure (`data`, `meta.message`, etc.).
+
+# Misc
+- No business logic in Models.
+- Keep helpers in dedicated classes, not global functions (unless Laravel helpers).
+- Use env/config, never hardcode secrets.
+- If adding events/jobs, queue them in Service layer after repo save.
+
+# "No Interfaces" Rule
+- Do NOT create repository/service interfaces unless explicitly requested.
+- Bind nothing for repositories; let Laravel auto-resolve concrete classes.
+
+# Done Criteria for a Task
+- Request, Service, Repository, Resource, Controller method, tests (if required), all responses via macros.
