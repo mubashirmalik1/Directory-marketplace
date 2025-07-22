@@ -76,4 +76,12 @@ Full Create, Read, Update, and Delete functionality for companies, accessible vi
     php artisan serve
     ```
 
-The API will be available at `http://127.0.0.1:8000`.
+The API will be available at `http://127.0.0.1:8000/api/`.
+
+## Future Improvements
+
+### 1. Domain-Centric Validation
+To further decouple domain logic from the framework, validation rules currently in `app/Http/Requests` could be moved into a dedicated `app/Domains/Validation` directory, grouping them with the domain they belong to rather than the transport layer.
+
+### 2. Role-Based Access Control (RBAC)
+Implement a comprehensive roles and permissions system. This will allow for different user types (e.g., Admin, Company Owner, User) with distinct access levels to various API endpoints and features, enabling more granular control.
